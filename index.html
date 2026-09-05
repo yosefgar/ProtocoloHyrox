@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protocolo Hyrox</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#EDEAE2;
+    --surface:#FBFAF7;
+    --surface-raised:#FFFFFF;
+    --ink:#1B1B18;
+    --ink-soft:#5B564C;
+    --ink-faint:#8B8578;
+    --line:#D8D2C4;
+    --line-strong:#C4BCA8;
+    --run:#DD4B1F;
+    --run-soft:#F7E1D6;
+    --strength:#26415C;
+    --strength-soft:#DCE4EB;
+    --leg:#A96A1E;
+    --leg-soft:#F3E4CB;
+    --rest:#6E7C6A;
+    --rest-soft:#E4E9E2;
+    --good:#3F7A4E;
+    --good-soft:#DEEBE1;
+    --bad:#AA4438;
+    --bad-soft:#F3E1DC;
+    --shadow: 0 1px 2px rgba(27,27,24,0.06), 0 6px 20px -10px rgba(27,27,24,0.15);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16181A;
+      --surface:#1E2123;
+      --surface-raised:#24272A;
+      --ink:#EDEAE2;
+      --ink-soft:#ABA69B;
+      --ink-faint:#7C776C;
+      --line:#34363A;
+      --line-strong:#44474C;
+      --run:#FF6B3D;
+      --run-soft:#3A2419;
+      --strength:#7FA6D1;
+      --strength-soft:#1E2C3A;
+      --leg:#E0A63F;
+      --leg-soft:#3A2E15;
+      --rest:#8FA089;
+      --rest-soft:#232823;
+      --good:#6FBF7D;
+      --good-soft:#1B2B1F;
+      --bad:#E2897B;
+      --bad-soft:#33221E;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16181A;
+    --surface:#1E2123;
+    --surface-raised:#24272A;
+    --ink:#EDEAE2;
+    --ink-soft:#ABA69B;
+    --ink-faint:#7C776C;
+    --line:#34363A;
+    --line-strong:#44474C;
+    --run:#FF6B3D;
+    --run-soft:#3A2419;
+    --strength:#7FA6D1;
+    --strength-soft:#1E2C3A;
+    --leg:#E0A63F;
+    --leg-soft:#3A2E15;
+    --rest:#8FA089;
+    --rest-soft:#232823;
+    --good:#6FBF7D;
+    --good-soft:#1B2B1F;
+    --bad:#E2897B;
+    --bad-soft:#33221E;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    line-height:1.55;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px 96px;}
+
+  h1,h2,h3{
+    font-family:'Barlow Condensed', 'Arial Narrow', sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    text-wrap:balance;
+    color:var(--ink);
+    margin:0;
+  }
+  .mono{font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums;}
+  a{color:var(--strength);}
+  :is(a,button,[tabindex]):focus-visible{outline:2px solid var(--run); outline-offset:2px;}
+
+  /* ---------- header ---------- */
+  header.hero{
+    padding:56px 24px 32px;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--run);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  h1.title{font-size:clamp(40px,7vw,64px); line-height:0.98;}
+  .dek{
+    max-width:62ch;
+    color:var(--ink-soft);
+    font-size:17px;
+    margin-top:14px;
+  }
+  .dek strong{color:var(--ink); font-weight:600;}
+
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(130px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    margin-top:32px;
+  }
+  .stat{
+    background:var(--surface);
+    padding:14px 16px;
+  }
+  .stat .n{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:26px; line-height:1;}
+  .stat .l{font-size:11.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-faint); margin-top:5px;}
+
+  /* ---------- race strip ---------- */
+  .race-strip{
+    margin-top:36px;
+    overflow-x:auto;
+  }
+  .race-strip .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint);
+    margin-bottom:8px;
+  }
+  .race-track{
+    display:flex;
+    min-width:820px;
+    border:1px solid var(--line-strong);
+  }
+  .race-track .seg{
+    flex:1 0 auto;
+    padding:9px 4px;
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    line-height:1.25;
+    border-right:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .race-track .seg:last-child{border-right:none;}
+  .race-track .seg.run{background:var(--run-soft); color:var(--run); font-weight:600;}
+  .race-track .seg.station{background:var(--surface); color:var(--ink-soft);}
+
+  /* ---------- nav ---------- */
+  nav.jump{
+    display:flex; flex-wrap:wrap; gap:6px 18px;
+    padding:18px 24px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+    position:sticky; top:0; z-index:5;
+  }
+  nav.jump a{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); text-decoration:none;
+    padding:4px 0; border-bottom:2px solid transparent;
+  }
+  nav.jump a:hover{color:var(--ink); border-color:var(--run);}
+
+  section{padding:52px 0 8px; border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  .section-head{margin-bottom:24px;}
+  .section-num{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--ink-faint); font-size:12.5px; letter-spacing:0.1em;
+  }
+  h2.section-title{font-size:clamp(26px,4vw,34px); margin-top:4px;}
+  .section-sub{color:var(--ink-soft); max-width:64ch; margin-top:8px; font-size:15px;}
+
+  /* ---------- weekly grid ---------- */
+  .week-grid{
+    display:grid;
+    grid-template-columns:repeat(7,minmax(120px,1fr));
+    gap:10px;
+    overflow-x:auto;
+    padding-bottom:4px;
+  }
+  .day-card{
+    border:1px solid var(--line);
+    background:var(--surface);
+    min-height:168px;
+    display:flex; flex-direction:column;
+  }
+  .day-card .day-name{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:15px;
+    text-transform:uppercase; letter-spacing:0.03em;
+    padding:9px 10px 7px;
+    border-bottom:1px solid var(--line);
+  }
+  .day-card .sessions{padding:9px 10px; display:flex; flex-direction:column; gap:7px; flex:1;}
+  .pill{
+    font-size:11px; font-weight:600; padding:5px 7px;
+    border-left:3px solid; line-height:1.3;
+  }
+  .pill .k{display:block; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:0.06em; text-transform:uppercase; opacity:0.75; margin-bottom:2px;}
+  .pill.run{border-color:var(--run); background:var(--run-soft); color:var(--run);}
+  .pill.strength{border-color:var(--strength); background:var(--strength-soft); color:var(--strength);}
+  .pill.leg{border-color:var(--leg); background:var(--leg-soft); color:var(--leg);}
+  .pill.rest{border-color:var(--rest); background:var(--rest-soft); color:var(--rest);}
+  .day-card.is-rest{opacity:0.75;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:14px 22px; margin-top:18px; font-size:12.5px; color:var(--ink-soft);}
+  .legend span{display:inline-flex; align-items:center; gap:7px;}
+  .legend i{width:11px; height:11px; display:inline-block;}
+  .legend i.run{background:var(--run);}
+  .legend i.strength{background:var(--strength);}
+  .legend i.leg{background:var(--leg);}
+  .legend i.rest{background:var(--rest);}
+
+  /* ---------- block cards ---------- */
+  .blocks{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;}
+  .block-card{
+    border:1px solid var(--line);
+    background:var(--surface);
+    padding:20px;
+    box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .block-card .b-num{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-faint);}
+  .block-card h3{font-size:22px; margin-top:2px;}
+  .block-card .b-dates{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--run); margin-top:2px;}
+  .block-card p{font-size:13.5px; color:var(--ink-soft); margin:0;}
+  .block-card .b-focus{font-size:13px; margin-top:2px;}
+  .block-card .b-focus b{color:var(--ink); font-weight:600;}
+
+  /* ---------- callout: leg management ---------- */
+  .callout{
+    border:1px solid var(--leg);
+    background:var(--leg-soft);
+    padding:22px 24px;
+    margin-bottom:16px;
+  }
+  .callout h3{font-size:19px; color:var(--leg); margin-bottom:8px;}
+  .callout p{font-size:14.5px; color:var(--ink); margin:0;}
+
+  .rule-list{display:flex; flex-direction:column; gap:16px;}
+  .rule{
+    display:grid; grid-template-columns:auto 1fr; gap:16px;
+    padding:16px 0; border-top:1px solid var(--line);
+  }
+  .rule:first-child{border-top:none; padding-top:0;}
+  .rule .r-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--leg);
+    letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; padding-top:2px;
+  }
+  .rule h4{font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:18px; text-transform:none; margin-bottom:4px;}
+  .rule p{font-size:14px; color:var(--ink-soft); margin:0;}
+
+  .injury-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-top:20px;}
+  .injury-card{border:1px solid var(--line); background:var(--surface); padding:18px 20px;}
+  .injury-card .i-part{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--strength); letter-spacing:0.08em; text-transform:uppercase;}
+  .injury-card h4{font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:19px; margin-top:3px;}
+  .injury-card ul{margin:10px 0 0; padding-left:18px; font-size:13.5px; color:var(--ink-soft);}
+  .injury-card li{margin-bottom:5px;}
+
+  /* ---------- master table ---------- */
+  .table-scroll{overflow-x:auto; border:1px solid var(--line);}
+  table.plan{border-collapse:collapse; width:100%; min-width:1320px; font-size:13px;}
+  table.plan th{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-faint); text-align:left; padding:10px 12px; border-bottom:1px solid var(--line-strong);
+    background:var(--surface); position:sticky; top:45px;
+  }
+  table.plan td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.plan tr.block-header td{
+    background:var(--strength); color:#fff; font-family:'Barlow Condensed',sans-serif;
+    font-weight:600; text-transform:uppercase; letter-spacing:0.03em; font-size:14px; padding:9px 12px;
+  }
+  :root[data-theme="dark"] table.plan tr.block-header td,
+  :root:not([data-theme="light"]) table.plan tr.block-header td{color:#0E1114;}
+  table.plan tr.deload td{background:var(--rest-soft);}
+  table.plan td.wk{font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--ink);}
+  table.plan td.dates{font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); font-size:12px; white-space:nowrap;}
+  table.plan td.tag{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.04em; text-transform:uppercase; color:var(--leg);}
+  .csess{display:flex; flex-direction:column; gap:6px; min-width:230px;}
+  .csess .ln{display:grid; grid-template-columns:34px 1fr; gap:8px; align-items:baseline;}
+  .csess .d{font-family:'IBM Plex Mono',monospace; font-size:9.5px; font-weight:600; letter-spacing:0.03em; color:var(--run);}
+  .csess .t{font-size:12px; color:var(--ink);}
+  .csess .t em{font-style:normal; color:var(--ink-faint);}
+
+  /* ---------- race week ---------- */
+  .raceweek{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;}
+  .rw-day{border:1px solid var(--line); background:var(--surface); padding:14px;}
+  .rw-day .rw-name{font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:16px; text-transform:uppercase;}
+  .rw-day .rw-what{font-size:12.5px; color:var(--ink-soft); margin-top:5px;}
+  .rw-day.raceday{border-color:var(--run); background:var(--run-soft);}
+  .rw-day.raceday .rw-name{color:var(--run);}
+
+  /* ---------- glossary ---------- */
+  .glossary{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .g-term{background:var(--surface); padding:16px 18px;}
+  .g-term .g-name{font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:16px; text-transform:uppercase; letter-spacing:0.02em; color:var(--run);}
+  .g-term p{font-size:13px; color:var(--ink-soft); margin:6px 0 0;}
+
+  .closing{padding:44px 0 8px;}
+  .closing p{max-width:64ch; color:var(--ink-soft); font-size:14.5px; margin:0 0 12px;}
+  .closing p strong{color:var(--ink);}
+
+  /* ---------- tracker ---------- */
+  .tracker{
+    margin-top:36px;
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+  }
+  .tracker-head{padding:22px 24px 4px;}
+  .tracker-head h3{font-size:22px;}
+  .tracker-head p{font-size:13.5px; color:var(--ink-soft); margin:6px 0 0; max-width:60ch;}
+
+  .mark-form{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    padding:18px 24px;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .mark-form .field{display:flex; flex-direction:column; gap:5px;}
+  .mark-form .field.wide{grid-column:span 2;}
+  .mark-form label{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--ink-faint);
+  }
+  .mark-form input, .mark-form select{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13.5px;
+    padding:8px 9px;
+    border:1px solid var(--line-strong);
+    background:var(--bg);
+    color:var(--ink);
+  }
+  .mark-form input:focus, .mark-form select:focus{outline:2px solid var(--run); outline-offset:1px;}
+  .pace-display{
+    font-family:'IBM Plex Mono',monospace; font-size:13.5px; font-weight:600; color:var(--run);
+    padding:8px 9px; border:1px dashed var(--line-strong); background:var(--run-soft);
+  }
+  .mark-form button{
+    grid-column:1 / -1;
+    justify-self:start;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600; font-size:15px; text-transform:uppercase; letter-spacing:0.04em;
+    background:var(--run); color:#FFF7F2;
+    border:none; padding:11px 22px; cursor:pointer;
+  }
+  .mark-form button:hover{opacity:0.9;}
+  .mark-form button:disabled{opacity:0.5; cursor:default;}
+
+  .mark-status{padding:0 24px; font-size:12.5px; color:var(--ink-faint); min-height:34px; display:flex; align-items:center;}
+  .mark-status.ok{color:var(--good);}
+  .mark-status.err{color:var(--bad);}
+
+  .mark-groups{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px; background:var(--line);}
+  .mark-group{background:var(--surface); padding:16px 20px 18px;}
+  .mark-group .mg-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .mark-group .mg-name{font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:17px; text-transform:uppercase; letter-spacing:0.02em;}
+  .mark-group .mg-count{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint);}
+  .mark-entries{margin-top:10px; display:flex; flex-direction:column; gap:0;}
+  .mark-entry{
+    display:grid; grid-template-columns:74px 1fr auto auto; gap:8px; align-items:center;
+    padding:7px 0; border-top:1px solid var(--line); font-size:12.5px;
+  }
+  .mark-entry:first-child{border-top:none;}
+  .mark-entry .me-date{font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); font-size:11px;}
+  .mark-entry .me-val{font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--ink);}
+  .mark-entry .me-note{grid-column:1 / -1; font-size:11.5px; color:var(--ink-faint); font-style:italic; margin-top:-3px;}
+  .mark-entry .me-delta{font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:2px 6px; white-space:nowrap;}
+  .mark-entry .me-delta.good{background:var(--good-soft); color:var(--good);}
+  .mark-entry .me-delta.bad{background:var(--bad-soft); color:var(--bad);}
+  .mark-entry .me-del{
+    background:none; border:none; color:var(--ink-faint); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .mark-entry .me-del:hover{color:var(--bad);}
+  .mark-empty{padding:22px 24px; font-size:13px; color:var(--ink-faint);}
+
+  /* ---------- today card ---------- */
+  .today-card{
+    border:2px solid var(--run);
+    background:var(--surface);
+    padding:26px 28px 24px;
+    margin-top:8px;
+  }
+  .today-card .t-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--run); font-weight:600;
+  }
+  .today-card h2{font-size:clamp(28px,4.5vw,38px); margin-top:4px;}
+  .today-card .t-date{font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); font-size:13.5px; margin-top:4px;}
+  .today-card .t-week{font-size:12.5px; color:var(--ink-faint); margin-top:2px;}
+  .today-sessions{margin-top:18px; display:flex; flex-direction:column; gap:10px; max-width:560px;}
+  .today-sessions .pill{font-size:13px; padding:9px 12px;}
+  .today-sessions .pill .k{font-size:10.5px;}
+  .today-empty{margin-top:16px; font-size:14px; color:var(--ink-soft);}
+  .today-link{
+    display:inline-block; margin-top:18px;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); text-decoration:none; border-bottom:1px solid var(--line-strong);
+  }
+  .today-link:hover{color:var(--run); border-color:var(--run);}
+  tr.wk-highlight td{background:var(--run-soft) !important;}
+
+  footer{padding:32px 24px 48px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-faint); text-align:center;}
+
+  @media (max-width:640px){
+    .week-grid{grid-template-columns:repeat(7,150px);}
+    nav.jump{overflow-x:auto; flex-wrap:nowrap;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow">Plan de entrenamiento · 23 semanas</div>
+    <h1 class="title">Protocolo Hyrox</h1>
+    <p class="dek">De cero en <em>running</em> a la línea de salida. <strong>5 sesiones de fuerza (empuje, tracción, pierna y funcional) y 3 de carrera por semana</strong>, repartidas en 5 días de entrenamiento, con la pierna gestionada para que fuerza y carrera se sumen en vez de restarse — y un día extra de tren superior para no perder lo ganado.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n mono">07 SEP</div><div class="l">Inicio del plan</div></div>
+      <div class="stat"><div class="n mono">08&ndash;14 FEB</div><div class="l">Semana de carrera*</div></div>
+      <div class="stat"><div class="n mono">23</div><div class="l">Semanas totales</div></div>
+      <div class="stat"><div class="n mono">4</div><div class="l">Bloques</div></div>
+      <div class="stat"><div class="n mono">5 / 2</div><div class="l">Días entreno / descanso</div></div>
+    </div>
+
+    <div class="race-strip">
+      <div class="label">La carrera que estás preparando</div>
+      <div class="race-track">
+        <div class="seg run">1 km run</div>
+        <div class="seg station">1000 m SkiErg</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">50 m Sled Push</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">50 m Sled Pull</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">80 m Burpee Broad Jump</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">1000 m Row</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">200 m Farmers Carry</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">100 m Sandbag Lunges</div>
+        <div class="seg run">1 km run</div>
+        <div class="seg station">100 Wall Balls</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="jump">
+  <a href="#hoy">Hoy</a>
+  <a href="#semana">Semana tipo</a>
+  <a href="#bloques">Los 4 bloques</a>
+  <a href="#pierna">Gestión de la pierna</a>
+  <a href="#calendario">Calendario semana a semana</a>
+  <a href="#carrera">Semana de carrera</a>
+  <a href="#glosario">Glosario</a>
+  <a href="#ajustes">Ajustes y seguimiento</a>
+</nav>
+
+<div class="wrap">
+
+  <section id="hoy" class="today-card">
+    <div class="t-eyebrow">Sincronizado con hoy</div>
+    <h2 id="todayHeading">Cargando&hellip;</h2>
+    <div class="t-date" id="todayDate"></div>
+    <div class="t-week" id="todayWeek"></div>
+    <div class="today-sessions" id="todaySessions"></div>
+    <a href="#calendario" class="today-link" id="todayLink">Ver el calendario completo &darr;</a>
+  </section>
+
+  <section id="semana">
+    <div class="section-head">
+      <div class="section-num">01</div>
+      <h2 class="section-title">La semana tipo</h2>
+      <p class="section-sub">Añadimos el día de tren superior que pedías sin tocar el resto: se ocupa el jueves, que antes era descanso. Queda en <strong>5 días de entrenamiento</strong> (3 dobles de carrera + fuerza, y 2 sencillos de fuerza sola) y <strong>2 días de descanso completo</strong>. El día de pierna pesada sigue siempre solo, sin carrera encima.</p>
+    </div>
+
+    <div class="week-grid">
+      <div class="day-card">
+        <div class="day-name">Lunes</div>
+        <div class="sessions">
+          <div class="pill run"><span class="k">AM · Carrera</span>Calidad (series / técnica)</div>
+          <div class="pill strength"><span class="k">PM · Fuerza</span>Tren superior · empuje</div>
+        </div>
+      </div>
+      <div class="day-card is-rest">
+        <div class="day-name">Martes</div>
+        <div class="sessions"><div class="pill rest"><span class="k">Descanso</span>Movilidad + gemelo excéntrico</div></div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Miércoles</div>
+        <div class="sessions"><div class="pill leg"><span class="k">Único · Fuerza</span>Pierna pesada (sin carrera)</div></div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Jueves</div>
+        <div class="sessions"><div class="pill strength"><span class="k">Único · Fuerza</span>Tren superior · tracción <em>(nuevo)</em></div></div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Viernes</div>
+        <div class="sessions">
+          <div class="pill run"><span class="k">AM · Carrera</span>Suave (Z2)</div>
+          <div class="pill strength"><span class="k">PM · Fuerza</span>Funcional Hyrox (pierna ligera)</div>
+        </div>
+      </div>
+      <div class="day-card">
+        <div class="day-name">Sábado</div>
+        <div class="sessions">
+          <div class="pill run"><span class="k">AM · Carrera</span>Larga / simulacro</div>
+          <div class="pill strength"><span class="k">PM · Fuerza</span>Core + hombro</div>
+        </div>
+      </div>
+      <div class="day-card is-rest">
+        <div class="day-name">Domingo</div>
+        <div class="sessions"><div class="pill rest"><span class="k">Descanso</span>Total</div></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="run"></i>Carrera</span>
+      <span><i class="strength"></i>Fuerza (tren superior / funcional)</span>
+      <span><i class="leg"></i>Pierna pesada (día dedicado)</span>
+      <span><i class="rest"></i>Descanso</span>
+    </div>
+    <p class="section-sub" style="margin-top:18px;">Los días de la semana son orientativos — muévelos como te convenga, pero conserva el patrón: <strong>el día de pierna pesada siempre aislado</strong>, con el jueves de tracción de por medio antes de volver a correr en serio el viernes, y nunca pegado a un día de series o carrera larga.</p>
+  </section>
+
+  <section id="bloques">
+    <div class="section-head">
+      <div class="section-num">02</div>
+      <h2 class="section-title">Los 4 bloques</h2>
+      <p class="section-sub">De cero en carrera a ritmo de competición en 23 semanas. El volumen de carrera sube de forma conservadora (nunca más de ~10% por semana) porque partes de cero ahí, y el énfasis de fuerza se desplaza de máxima a fuerza-resistencia funcional según se acerca la fecha.</p>
+    </div>
+    <div class="blocks">
+      <div class="block-card">
+        <div class="b-num mono">BLOQUE 1 / 4</div>
+        <h3>Base</h3>
+        <div class="b-dates">Sem 1&ndash;6 · 7 sep &ndash; 18 oct</div>
+        <p>Construir el motor aeróbico desde cero y recuperar el hombro sin perder fuerza general.</p>
+        <div class="b-focus"><b>Carrera:</b> rodajes continuos en Z2 + <em>drills</em> de técnica (skipping, taloneo, zancada lateral), 20→40 min. Desde la semana 3, un primer contacto muy ligero con sprints en cuesta (2→6×8&rdquo;) para ir acostumbrando el cuerpo antes del Bloque 2.</div>
+        <div class="b-focus"><b>Pierna (miércoles):</b> sentadilla trasera, peso muerto rumano, zancada búlgara, elevación de gemelo excéntrica.</div>
+        <div class="b-focus"><b>Empuje (lunes):</b> press banca o mancuerna plano, fondos en banco, extensión de tríceps.</div>
+        <div class="b-focus"><b>Tracción (jueves):</b> remo con mancuerna/barra, jalón al pecho, face pull, rotación externa con banda &mdash; base del rehab de hombro.</div>
+        <div class="b-focus"><b>Funcional (viernes):</b> sled push/pull con carga baja, farmer carry ligero, step-ups.</div>
+        <div class="b-focus"><b>Core / hombro (sábado):</b> plancha, pallof press, movilidad torácica. Nada por encima de la cabeza todavía.</div>
+      </div>
+      <div class="block-card">
+        <div class="b-num mono">BLOQUE 2 / 4</div>
+        <h3>Desarrollo</h3>
+        <div class="b-dates">Sem 7&ndash;12 · 19 oct &ndash; 29 nov</div>
+        <p>Meter calidad en la carrera y empezar a cargar la pierna con progresión real.</p>
+        <div class="b-focus"><b>Carrera:</b> series de eficiencia (200&ndash;300 m) y series largas (400&ndash;500 m) alternas semana a semana, sprints en cuesta cada 2&ndash;3 semanas, tempo runs, rodaje largo progresivo (35→55 min).</div>
+        <div class="b-focus"><b>Pierna:</b> sentadilla (sube carga) o frontal, peso muerto convencional, zancada con mancuernas/sandbag, hip thrust.</div>
+        <div class="b-focus"><b>Empuje:</b> press banca/inclinado, press militar con mancuerna si el hombro va sin dolor, landmine press.</div>
+        <div class="b-focus"><b>Tracción:</b> dominadas asistidas o remo pesado, jalón, face pull, curl de bíceps.</div>
+        <div class="b-focus"><b>Funcional:</b> sled a carga media, wall balls (técnica, peso ligero), farmer carry pesado, burpees.</div>
+        <div class="b-focus"><b>Core / hombro:</b> anti-rotación con carga, estabilidad de hombro, movilidad de cadera.</div>
+      </div>
+      <div class="block-card">
+        <div class="b-num mono">BLOQUE 3 / 4</div>
+        <h3>Específico Hyrox</h3>
+        <div class="b-dates">Sem 13&ndash;18 · 30 nov &ndash; 10 ene</div>
+        <p>Simular la exigencia real: correr con las piernas ya cargadas de estación.</p>
+        <div class="b-focus"><b>Carrera:</b> series a ritmo de carrera + <em>umbral en estaciones</em> semanal (4 estaciones enlazadas con carrera) + sprints en cuesta puntuales + medio-Hyrox (sem. 16).</div>
+        <div class="b-focus"><b>Pierna:</b> mantenimiento 2&ndash;3 series (sentadilla/peso muerto) + sandbag lunges, step-ups con peso.</div>
+        <div class="b-focus"><b>Empuje:</b> press banca, press militar con repeticiones altas (resistencia), fondos.</div>
+        <div class="b-focus"><b>Tracción:</b> dominadas, remo, face pull continuo &mdash; sigue siendo el prehab de hombro.</div>
+        <div class="b-focus"><b>Funcional:</b> sled a carga de carrera, wall balls con peso oficial, farmer carry 200 m, burpee broad jump y remo/ski erg por tiempo.</div>
+        <div class="b-focus"><b>Core / hombro:</b> activación previa al medio-Hyrox, movilidad general.</div>
+      </div>
+      <div class="block-card">
+        <div class="b-num mono">BLOQUE 4 / 4</div>
+        <h3>Pico y puesta a punto</h3>
+        <div class="b-dates">Sem 19&ndash;23 · 11 ene &ndash; 14 feb</div>
+        <p>Un último simulacro completo y luego bajar volumen sin perder chispa.</p>
+        <div class="b-focus"><b>Carrera:</b> simulacro completo (sem. 20), luego -30% / -50% de volumen manteniendo toques de ritmo.</div>
+        <div class="b-focus"><b>Pierna:</b> mínima, 1&ndash;2 series ligeras; prioridad absoluta es llegar fresco.</div>
+        <div class="b-focus"><b>Empuje / tracción:</b> volumen reducido, técnica limpia, lejos del fallo &mdash; solo mantener, no ganar.</div>
+        <div class="b-focus"><b>Funcional:</b> toques técnicos de estación, sin carga máxima.</div>
+        <div class="b-focus"><b>Core / hombro:</b> movilidad y activación; nada nuevo esta fase.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pierna">
+    <div class="section-head">
+      <div class="section-num">03</div>
+      <h2 class="section-title">Gestión de la pierna</h2>
+      <p class="section-sub">Esto es lo que decide si fuerza y carrera se potencian o se estorban. La pierna es el punto de fricción entre ambas — todo lo demás del plan está construido alrededor de estas reglas.</p>
+    </div>
+
+    <div class="callout">
+      <h3>La regla de las 48 horas</h3>
+      <p>Nunca sentadilla o peso muerto pesado el mismo día, ni el día antes, ni el día después de una carrera de series o de un rodaje largo. Si un día es de calidad en carrera, la pierna en el gimnasio ese día es accesoria (ligera). Si un día es de pierna pesada, no hay carrera de calidad cerca &mdash; solo descanso a los lados.</p>
+    </div>
+
+    <div class="rule-list">
+      <div class="rule">
+        <div class="r-tag">Regla 01</div>
+        <div><h4>La intensidad no se solapa</h4><p>En los días dobles, si la carrera es la que manda (series, tempo, larga), la fuerza de ese mismo día trabaja tren superior, core o estabilidad de hombro &mdash; nunca sentadilla o zancada cargada. La pierna solo se carga de verdad en su día en solitario.</p></div>
+      </div>
+      <div class="rule">
+        <div class="r-tag">Regla 02</div>
+        <div><h4>Orden dentro del día doble</h4><p>Corre primero, con las piernas frescas, y entrena fuerza después con al menos 4&ndash;6 h de por medio (mañana / tarde) &mdash; por encima de las 3 h que la evidencia marca como margen mínimo para no interferir entre estímulos. No es que el gimnasio &ldquo;estropee&rdquo; la fuerza si lo haces distinto (la investigación reciente encuentra poca interferencia real en fuerza e hipertrofia entre entrenar junto o separado); es que la carrera de calidad sale mejor con las piernas frescas, que es tu prioridad ahora mismo.</p></div>
+      </div>
+      <div class="rule">
+        <div class="r-tag">Regla 03</div>
+        <div><h4>Progresión de carrera conservadora</h4><p>Como partes sin base de running, el volumen semanal sube de forma gradual (el plan ya lo hace en pasos de ~5&ndash;10%), con una semana de descarga cada 6. Pero el dato real a vigilar no es el % semanal &mdash; un estudio sobre más de 588.000 sesiones encontró que lo que dispara el riesgo de lesión es una <strong>tirada suelta que supere el 110% de tu carrera más larga del último mes</strong>, no la progresión gradual. Traducido: nunca metas un rodaje o una larga muy por encima de lo que llevas hecho, aunque ese día te encuentres con ganas.</p></div>
+      </div>
+      <div class="rule">
+        <div class="r-tag">Regla 04</div>
+        <div><h4>La fuerza funcional se programa en días suaves</h4><p>Zancadas con sandbag, wall balls, sled, step-ups: van en los días de carrera suave (viernes), no en los de series. Ya suman fatiga, pero es fatiga compatible con un rodaje fácil, no con trabajo de calidad.</p></div>
+      </div>
+      <div class="rule">
+        <div class="r-tag">Regla 05</div>
+        <div><h4>Autorregulación por encima del plan</h4><p>Si llegas a un día de pierna con las piernas cargadas o con molestias, baja carga antes de romper la estructura: mejor un RPE 6 hecho que un RPE 8 forzado que te saca dos semanas.</p></div>
+      </div>
+    </div>
+
+    <div class="injury-grid">
+      <div class="injury-card">
+        <div class="i-part">Hombro · pinzamiento en recuperación</div>
+        <h4>Cómo se adapta el plan</h4>
+        <ul>
+          <li>Bloque 1: nada por encima de la cabeza. Solo rotadores externos, remo, band pull-aparts y trabajo escapular pain-free.</li>
+          <li>Bloque 2: reintroducción gradual con press landmine o mancuerna en agarre neutro, siempre sin dolor.</li>
+          <li>Bloque 3: solo si el hombro lleva semanas sin molestia se reintroduce el patrón de <em>wall ball</em> (empuje aéreo), con peso ligero antes que oficial.</li>
+          <li>Cualquier molestia que persista más de una semana: para el trabajo de hombro y consulta con tu fisio antes de seguir subiendo carga.</li>
+        </ul>
+      </div>
+      <div class="injury-card">
+        <div class="i-part">Gemelos · tendencia a cargarse</div>
+        <h4>Cómo se adapta el plan</h4>
+        <ul>
+          <li>2 sesiones/semana de elevaciones de talón excéntricas (fuera del día de pierna pesada), desde la semana 1.</li>
+          <li>Progresión gradual y, sobre todo, ninguna tirada suelta muy por encima de tu carrera más larga reciente &mdash; es lo que más predice sobrecarga, más que el volumen semanal total.</li>
+          <li>Foam roller / masaje en gemelo tras cada carrera, y vigilar la rigidez matinal como primera señal de sobrecarga.</li>
+          <li>Nada de cuestas ni series muy rápidas en Bloque 1 &mdash; se introducen progresivamente a partir del Bloque 2.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="calendario">
+    <div class="section-head">
+      <div class="section-num">04</div>
+      <h2 class="section-title">Calendario semana a semana</h2>
+      <p class="section-sub">Las 23 semanas del plan, con la estructura exacta de cada sesión de carrera (distancia/duración, esfuerzo y descanso) para saber qué hacer sin tener que interpretarlo. Fechas desde el lunes 7 de septiembre de 2026 hasta la semana de carrera (asumiendo Hyrox a mediados de febrero de 2027 &mdash; ajusta todo el calendario ±1 semana en cuanto tengas el día exacto).</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="plan">
+        <thead>
+          <tr><th>Sem</th><th>Fechas</th><th>Carrera (L · V · S)</th><th>Pierna</th><th>Tren superior</th><th>Nota</th></tr>
+        </thead>
+        <tbody>
+          <tr class="block-header"><td colspan="6">Bloque 1 &middot; Base</td></tr>
+          <tr id="wk1"><td class="wk mono">1</td><td class="dates">7&ndash;13 sep</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Técnica</em> 20&rsquo; Z2 + 4×15&rdquo; progresiones (rec. 45&rdquo; trote)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 20&rsquo; continuo, Z2 conversacional</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 25&rsquo; continuo, Z2 conversacional</span></div>
+            </div></td><td>4×8 RPE6</td><td>Empuje 4×8 RPE6&ndash;7 · Tracción 4×8 RPE6&ndash;7 (face pull)</td><td class="tag">arranque</td></tr>
+          <tr id="wk2"><td class="wk mono">2</td><td class="dates">14&ndash;20 sep</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Técnica</em> 22&rsquo; Z2 + 4×15&rdquo; prog. (rec. 45&rdquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 22&rsquo; continuo Z2</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 28&rsquo; continuo Z2</span></div>
+            </div></td><td>4×8 RPE6&ndash;7</td><td>Empuje 4×8 RPE7 · Tracción 4×8 RPE7</td><td class="tag"></td></tr>
+          <tr id="wk3"><td class="wk mono">3</td><td class="dates">21&ndash;27 sep</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Técnica</em> 25&rsquo; Z2 + 5×15&rdquo; prog. (rec. 45&rdquo;) + <em>cuesta</em> 2×8&rdquo; @6&ndash;8%, primer contacto (recup. completa bajando andando)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 25&rsquo; continuo Z2</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 32&rsquo; continuo Z2</span></div>
+            </div></td><td>4×9 RPE7</td><td>Empuje 4×8 RPE7 · Tracción 4×8 RPE7</td><td class="tag">cuesta 1/3</td></tr>
+          <tr id="wk4"><td class="wk mono">4</td><td class="dates">28 sep&ndash;4 oct</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Técnica</em> 25&rsquo; Z2 + 5×20&rdquo; prog. (rec. 45&rdquo;) + <em>cuesta</em> 4×8&rdquo; @6&ndash;8%</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 25&rsquo; Z2 + 15&rsquo; funcional ligero (sled/farmer)</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 35&rsquo; continuo Z2</span></div>
+            </div></td><td>4×9 RPE7 · funcional ligero</td><td>Empuje 4×8 RPE7 · Tracción 4×8 RPE7</td><td class="tag">cuesta 2/3</td></tr>
+          <tr id="wk5"><td class="wk mono">5</td><td class="dates">5&ndash;11 oct</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Técnica</em> 28&rsquo; Z2 + 6×20&rdquo; prog. (rec. 45&rdquo;) + <em>cuesta</em> 6×8&rdquo; @6&ndash;8%</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 28&rsquo; Z2 + 15&rsquo; funcional ligero</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 38&rsquo; continuo Z2</span></div>
+            </div></td><td>4×10 RPE7</td><td>Empuje 4×8 RPE7&ndash;8 · Tracción 4×8 RPE7&ndash;8</td><td class="tag">cuesta 3/3</td></tr>
+          <tr id="wk6" class="deload"><td class="wk mono">6</td><td class="dates">12&ndash;18 oct</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Técnica</em> 18&rsquo; Z2, sin progresiones ni cuestas (semana de descarga)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 18&rsquo; muy suave</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 25&rsquo; suave</span></div>
+            </div></td><td>3×8 RPE5&ndash;6</td><td>Empuje/Tracción 3×8 RPE5, técnica</td><td class="tag">descarga</td></tr>
+
+          <tr class="block-header"><td colspan="6">Bloque 2 &middot; Desarrollo</td></tr>
+          <tr id="wk7"><td class="wk mono">7</td><td class="dates">19&ndash;25 oct</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series eficiencia</em> 8×300 m @más rápido que ritmo carrera (rec. 2&rsquo;), calent./vuelta calma 10&rsquo;</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 30&rsquo; Z2 + 15&rsquo; funcional ligero</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 40&rsquo;, últimos 10&rsquo; @RPE6</span></div>
+            </div></td><td>4×6 RPE7&ndash;8</td><td>Empuje 4×6 RPE7&ndash;8 (test overhead) · Tracción 4×8 RPE7</td><td class="tag">eficiencia</td></tr>
+          <tr id="wk8"><td class="wk mono">8</td><td class="dates">26 oct&ndash;1 nov</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Sprints en cuesta</em> 6×10&rdquo; @5&ndash;8% pendiente, casi máximo (bajada andando) + rodaje 20&rsquo; encuadrando</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 30&rsquo; Z2 + 15&rsquo; funcional</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 42&rsquo;, últimos 10&rsquo; @RPE6</span></div>
+            </div></td><td>4×10 RPE7 (hipertrofia)</td><td>Empuje 4×8 RPE7 · Tracción 4×8 RPE7</td><td class="tag">cuesta</td></tr>
+          <tr id="wk9"><td class="wk mono">9</td><td class="dates">2&ndash;8 nov</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series largas</em> 8×400 m @RPE8, ritmo carrera (rec. 75&rdquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Umbral en estaciones</em>: 3 rondas (150 m sled push + 10 wall balls + 200 m @RPE7&ndash;8) + 15&rsquo; rodaje cierre</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 45&rsquo;, últimos 10&rsquo; @RPE6&ndash;7</span></div>
+            </div></td><td>4×6 RPE8</td><td>Empuje 4×6 RPE8 · Tracción 4×6 RPE8</td><td class="tag">umbral</td></tr>
+          <tr id="wk10"><td class="wk mono">10</td><td class="dates">9&ndash;15 nov</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Tempo</em> 20&rsquo; continuo @70&ndash;75% esfuerzo (tras 10&rsquo; calent.)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 35&rsquo; Z2 + 15&rsquo; funcional</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 48&rsquo;, últimos 10&rsquo; @RPE6&ndash;7</span></div>
+            </div></td><td>4×10 RPE7</td><td>Empuje 4×8 RPE7 · Tracción 4×8 RPE7</td><td class="tag">tempo</td></tr>
+          <tr id="wk11"><td class="wk mono">11</td><td class="dates">16&ndash;22 nov</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series eficiencia</em> 6×200 m @muy rápido (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Umbral en estaciones</em>: 3 rondas (150 m sled pull + 15 burpees + 200 m @RPE7&ndash;8)</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 55&rsquo;, últimos 15&rsquo; @RPE6&ndash;7</span></div>
+            </div></td><td>4×6 RPE8</td><td>Empuje 4×6 RPE8 · Tracción 4×6 RPE8</td><td class="tag">umbral</td></tr>
+          <tr id="wk12" class="deload"><td class="wk mono">12</td><td class="dates">23&ndash;29 nov</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series</em> 4×400 m @RPE6&ndash;7 (rec. 2&rsquo;), suave</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 25&rsquo; suave</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 30&rsquo; suave</span></div>
+            </div></td><td>3×8 RPE5&ndash;6</td><td>Empuje/Tracción 3×8 RPE5, técnica</td><td class="tag">descarga</td></tr>
+
+          <tr class="block-header"><td colspan="6">Bloque 3 &middot; Específico Hyrox</td></tr>
+          <tr id="wk13"><td class="wk mono">13</td><td class="dates">30 nov&ndash;6 dic</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series largas</em> 6×600 m @ritmo carrera (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Umbral en estaciones</em>: 4 rondas (100 m sled push + 100 m sled pull + 10 wall balls + 200 m @RPE7&ndash;8)</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 45&rsquo;, últimos 15&rsquo; @RPE7</span></div>
+            </div></td><td>Mantenim. 3×5 RPE7 · sled/wall ball</td><td>Empuje 3×8 RPE7 · Tracción 3×8 RPE7</td><td class="tag">umbral</td></tr>
+          <tr id="wk14"><td class="wk mono">14</td><td class="dates">7&ndash;13 dic</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series largas</em> 5×800 m @ritmo carrera (rec. 2&rsquo;30&rdquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Umbral en estaciones</em>: 4 rondas (50 m farmer carry + 20 sandbag lunges + 200 m @RPE7&ndash;8)</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 50&rsquo;, 2×10&rsquo; @RPE7</span></div>
+            </div></td><td>Farmer + sandbag lunges</td><td>Empuje 3×8 RPE7 · Tracción 3×8 RPE7</td><td class="tag">umbral</td></tr>
+          <tr id="wk15"><td class="wk mono">15</td><td class="dates">14&ndash;20 dic</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Sprints en cuesta</em> 8×10&rdquo; @máximo + 4×400 m @ritmo carrera (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Umbral en estaciones</em>: 4 rondas (80 m burpee broad jump + 250 m remo + 200 m @RPE7&ndash;8)</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 55&rsquo; con bloques a ritmo carrera</span></div>
+            </div></td><td>Burpee broad jump + remo</td><td>Empuje 3×8 RPE7 · Tracción 3×8 RPE7</td><td class="tag">cuesta + umbral</td></tr>
+          <tr id="wk16"><td class="wk mono">16</td><td class="dates">21&ndash;27 dic</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series</em> suaves 4×400 m @RPE6&ndash;7 (activación)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 25&rsquo; suave, previo al test</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><strong>Medio-Hyrox</strong>: 4 km + 4 estaciones (500 SkiErg / 25 m sled push / 25 m sled pull / 50 wall balls) @ritmo objetivo</span></div>
+            </div></td><td>Mantenim. · volumen moderado</td><td>Empuje/Tracción 2×8 RPE6 · activación</td><td class="tag">test</td></tr>
+          <tr id="wk17"><td class="wk mono">17</td><td class="dates">28 dic&ndash;3 ene</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series largas</em> 6×800 m @ritmo carrera (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Umbral en estaciones</em> (avanzado): 6 rondas cortas enlazando estación + carrera, simulando transiciones reales</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 60&rsquo;, 20&rsquo; finales @ritmo carrera</span></div>
+            </div></td><td>Estaciones completas, carga alta</td><td>Empuje 3×8 RPE7 · Tracción 3×8 RPE7</td><td class="tag">umbral</td></tr>
+          <tr id="wk18" class="deload"><td class="wk mono">18</td><td class="dates">4&ndash;10 ene</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series</em> 4×400 m suaves @RPE6</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> 25&rsquo; suave</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 30&rsquo; suave</span></div>
+            </div></td><td>3×8 RPE5&ndash;6</td><td>Empuje/Tracción 3×8 RPE5, técnica</td><td class="tag">descarga</td></tr>
+
+          <tr class="block-header"><td colspan="6">Bloque 4 &middot; Pico y puesta a punto</td></tr>
+          <tr id="wk19"><td class="wk mono">19</td><td class="dates">11&ndash;17 ene</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series</em> 5×600 m @ritmo carrera (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Compromised run</em> ligero: 3 rondas</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 50&rsquo;, 15&rsquo; @ritmo carrera</span></div>
+            </div></td><td>Mantenim. 2×5 RPE7</td><td>Empuje/Tracción 2×8 RPE6, mantenimiento</td><td class="tag">última carga</td></tr>
+          <tr id="wk20"><td class="wk mono">20</td><td class="dates">18&ndash;24 ene</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Rodaje</em> suave 20&rsquo; (pre-simulacro)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> suave 20&rsquo;</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><strong>Simulacro completo Hyrox</strong>: 8 km + 8 estaciones oficiales, @ritmo objetivo</span></div>
+            </div></td><td>Sin pierna pesada</td><td>Solo activación, sin carga pesada</td><td class="tag">simulacro</td></tr>
+          <tr id="wk21"><td class="wk mono">21</td><td class="dates">25&ndash;31 ene</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series</em> 4×400 m @RPE7 (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> suave 25&rsquo;</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Larga</em> 35&rsquo; suave, 10&rsquo; @ritmo carrera</span></div>
+            </div></td><td>Sin pierna pesada</td><td>Movilidad + activación ligera</td><td class="tag">taper</td></tr>
+          <tr id="wk22"><td class="wk mono">22</td><td class="dates">1&ndash;7 feb</td><td><div class="csess">
+              <div class="ln"><span class="d">LUN</span><span class="t"><em>Series</em> 3×300 m @RPE7 (rec. 2&rsquo;)</span></div>
+              <div class="ln"><span class="d">VIE</span><span class="t"><em>Rodaje</em> suave 20&rsquo;</span></div>
+              <div class="ln"><span class="d">SÁB</span><span class="t"><em>Rodaje</em> 25&rsquo; suave + 4 progresiones cortas</span></div>
+            </div></td><td>Solo movilidad</td><td>Movilidad + activación ligera</td><td class="tag">taper</td></tr>
+          <tr id="wk23"><td class="wk mono">23</td><td class="dates">8&ndash;14 feb</td><td>Ver detalle de semana de carrera abajo</td><td>&mdash;</td><td>&mdash;</td><td class="tag">carrera</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="section-sub" style="margin-top:16px;">No tienes aún una marca de referencia en carrera, así que &ldquo;ritmo carrera&rdquo; y los RPE se ajustan por sensación: a partir de la semana 7 usa el ritmo de tus primeras series como referencia y corrígelo cada 3&ndash;4 semanas según cómo lo sientas, sin obsesionarte con el crono estas primeras semanas.</p>
+  </section>
+
+  <section id="carrera">
+    <div class="section-head">
+      <div class="section-num">05</div>
+      <h2 class="section-title">Semana de carrera</h2>
+      <p class="section-sub">Nada de novedades esta semana: ni ejercicios nuevos, ni probar material, ni exprimir un último entreno fuerte. El trabajo ya está hecho.</p>
+    </div>
+    <div class="raceweek">
+      <div class="rw-day"><div class="rw-name">Lun</div><div class="rw-what">Rodaje muy suave 20&rsquo; + movilidad</div></div>
+      <div class="rw-day"><div class="rw-name">Mar</div><div class="rw-what">Descanso total</div></div>
+      <div class="rw-day"><div class="rw-name">Mié</div><div class="rw-what">Activación breve: 15&rsquo; + 4 progresiones</div></div>
+      <div class="rw-day"><div class="rw-name">Jue</div><div class="rw-what">Descanso, hidratación y carbohidratos al alza</div></div>
+      <div class="rw-day"><div class="rw-name">Vie</div><div class="rw-what">Movilidad ligera, repasar logística de carrera</div></div>
+      <div class="rw-day raceday"><div class="rw-name">Sáb / Dom</div><div class="rw-what">Día de carrera &mdash; confía en el trabajo hecho</div></div>
+      <div class="rw-day"><div class="rw-what" style="margin-top:0;">Ajusta este bloque a tu horario de salida real en cuanto lo confirmen.</div></div>
+    </div>
+  </section>
+
+  <section id="glosario">
+    <div class="section-head">
+      <div class="section-num">06</div>
+      <h2 class="section-title">Glosario de sesiones</h2>
+      <p class="section-sub">Qué significa cada palabra que aparece en el calendario, para no tener que adivinarlo cada semana.</p>
+    </div>
+    <div class="glossary">
+      <div class="g-term"><div class="g-name">Técnica</div><p>Carrera suave con <em>drills</em> metidos dentro (skipping, taloneo, zancada lateral) y alguna progresión corta de 15&ndash;20&rdquo; más rápida. El objetivo no es el esfuerzo, es mejorar cómo apoyas y cómo te mueves.</p></div>
+      <div class="g-term"><div class="g-name">Rodaje</div><p>Carrera continua a ritmo cómodo (Zona 2, deberías poder hablar mientras corres). Es el kilometraje base que construye motor aeróbico sin generar fatiga real.</p></div>
+      <div class="g-term"><div class="g-name">Larga</div><p>El rodaje más largo de la semana, mismo ritmo suave pero más duración. Es lo que te da capacidad de aguantar los 8 km fraccionados de la carrera sin que se note al final.</p></div>
+      <div class="g-term"><div class="g-name">Series</div><p>Tramos cortos y rápidos con descanso entre medias. Hay dos versiones: <strong>series largas</strong> (400&ndash;800 m, cerca de tu ritmo objetivo de carrera) para aguantar ese ritmo con fatiga, y <strong>series de eficiencia</strong> (200&ndash;300 m, más cortas y más rápidas que el ritmo de carrera) para mejorar la técnica a velocidad y la economía de carrera &mdash; correr más rápido gastando menos.</p></div>
+      <div class="g-term"><div class="g-name">Sprints en cuesta</div><p>6&ndash;8 arrancadas de 8&ndash;12&rdquo; cuesta arriba (pendiente suave, 5&ndash;8%) casi al máximo, bajando andando como recuperación completa. La pendiente te frena, así que hay menos impacto por zancada que un sprint en llano &mdash; ganas potencia y economía de carrera con bajo riesgo para el gemelo.</p></div>
+      <div class="g-term"><div class="g-name">Tempo</div><p>Un tramo continuo (sin pausas) a un esfuerzo &ldquo;incómodo pero sostenible&rdquo;, alrededor del 70&ndash;80% de tu esfuerzo máximo &mdash; más lento que las series, más rápido que el rodaje. Trabaja el umbral: el ritmo que puedes sostener más tiempo antes de reventar.</p></div>
+      <div class="g-term"><div class="g-name">Compromised run</div><p>Correr justo después de una estación de fuerza (trineo, wall balls&hellip;), con las piernas ya cargadas. Es la sensación específica de Hyrox: nunca corres con las piernas frescas.</p></div>
+      <div class="g-term"><div class="g-name">Umbral en estaciones</div><p>La versión más exigente del compromised run: tras calentar, enlazas <strong>4 estaciones</strong> con tramos de carrera entre medias, todo a esfuerzo de umbral (RPE7&ndash;8) y sin pausas largas. Entrena exactamente lo que pide la carrera &mdash; sostener intensidad cuando las piernas ya no están frescas.</p></div>
+      <div class="g-term"><div class="g-name">Funcional + rodaje</div><p>La sesión combinada del viernes: un bloque de trabajo funcional Hyrox (sled, farmer, wall balls&hellip;) junto con la carrera suave de ese día.</p></div>
+      <div class="g-term"><div class="g-name">Medio-Hyrox / Simulacro</div><p>Un ensayo del formato real: tramos de carrera alternados con estaciones, a menor escala (medio-Hyrox, semana 16) o completo (simulacro, semana 20). Sirve para probar ritmo, transiciones y nutrición antes del día real.</p></div>
+      <div class="g-term"><div class="g-name">Descarga (deload)</div><p>Semana con volumen reducido a propósito (&minus;30%) para que el cuerpo asimile las semanas anteriores. No es pereza, es parte del plan &mdash; sáltatela y el riesgo de lesión sube.</p></div>
+      <div class="g-term"><div class="g-name">RPE</div><p>Escala de esfuerzo percibido del 1 al 10. RPE 6&ndash;7 es &ldquo;exigente pero con margen&rdquo;, RPE 8 es &ldquo;cerca del límite, 2 repeticiones de margen&rdquo;. Te sirve para dosificar la carga sin depender solo del peso en la barra.</p></div>
+    </div>
+  </section>
+
+  <section id="ajustes" class="closing">
+    <div class="section-head">
+      <div class="section-num">07</div>
+      <h2 class="section-title">Ajustes y seguimiento</h2>
+    </div>
+    <p><strong>La fecha exacta manda.</strong> Este calendario asume carrera a mediados de febrero de 2027; en cuanto tengas el día confirmado, desplaza el Bloque 4 para que la semana 23 caiga justo antes.</p>
+    <p><strong>El plan pedía 4 meses; la carrera está a algo más de 5.</strong> En vez de recortar, se ha construido el recorrido completo hasta la fecha real en 4 bloques &mdash; así llegas afinado el día de la carrera en lugar de haber hecho un pico de forma en enero y perderlo esperando a febrero.</p>
+    <p><strong>Dolor persistente en hombro o gemelo &gt; 1 semana</strong> es señal de bajar carga y pasar por un fisio, no de aguantar entrenando igual.</p>
+    <p><strong>Sueño y proteína</strong> hacen más por la recuperación que cualquier estiramiento: con 5 días de entrenamiento a la semana (3 dobles + 2 sencillos), son la base que sostiene todo lo demás.</p>
+
+    <div class="tracker" id="tracker">
+      <div class="tracker-head">
+        <h3>Registro de marcas</h3>
+        <p>Apunta tus marcas a medida que las vayas haciendo &mdash; tests de carrera, PRs de fuerza, estaciones Hyrox&hellip; Se guardan en este navegador (localStorage), así que seguirán aquí la próxima vez que abras la página <strong>en el mismo dispositivo y navegador</strong>.</p>
+      </div>
+      <form class="mark-form" id="markForm">
+        <div class="field">
+          <label for="mDate">Fecha</label>
+          <input type="date" id="mDate" required>
+        </div>
+        <div class="field">
+          <label for="mMarker">Marcador</label>
+          <select id="mMarker"></select>
+        </div>
+        <div class="field" id="customField" hidden>
+          <label for="mCustomName">Nombre del marcador</label>
+          <input type="text" id="mCustomName" placeholder="p. ej. Zancada con sandbag">
+        </div>
+        <div class="field" id="valueField">
+          <label for="mValue" id="mValueLabel">Valor</label>
+          <input type="text" id="mValue" placeholder="mm:ss">
+        </div>
+        <div class="field" id="runDistanceField" hidden>
+          <label for="mDistance">Distancia (km)</label>
+          <input type="text" id="mDistance" placeholder="p. ej. 5 o 8.2">
+        </div>
+        <div class="field" id="runTimeField" hidden>
+          <label for="mRunTime">Tiempo total</label>
+          <input type="text" id="mRunTime" placeholder="mm:ss">
+        </div>
+        <div class="field" id="runPaceField" hidden>
+          <label>Ritmo / km</label>
+          <div class="pace-display" id="mPaceDisplay">&mdash;</div>
+        </div>
+        <div class="field wide">
+          <label for="mNote">Nota (opcional)</label>
+          <input type="text" id="mNote" placeholder="cómo te sentiste, condiciones…">
+        </div>
+        <button type="submit" id="mSubmit">Guardar marca</button>
+      </form>
+      <div class="mark-status" id="markStatus"></div>
+      <div class="mark-groups" id="markGroups">
+        <div class="mark-empty">Cargando registro&hellip;</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>PROTOCOLO HYROX &middot; 23 SEMANAS &middot; 4 BLOQUES &middot; 7 SEP 2026 &rarr; FEB 2027</footer>
+
+<script>
+(function(){
+  var START = new Date(2026, 8, 7); // 7 sep 2026, lunes semana 1 (mes 0-indexado)
+
+  function W(n, y, m, d, block, deload, lunRun, lunStr, pierna, jueStr, vieRun, sabRun, sabStr, tag){
+    return {
+      n: n, start: new Date(y, m, d), block: block, deload: !!deload, tag: tag || '',
+      days: {
+        1: [{k:'Carrera', t:lunRun}, {k:'Fuerza · empuje', t:lunStr}],
+        2: null,
+        3: [{k:'Fuerza · pierna', t:pierna}],
+        4: [{k:'Fuerza · tracción', t:jueStr}],
+        5: [{k:'Carrera', t:vieRun}],
+        6: [{k:'Carrera', t:sabRun}, {k:'Fuerza', t:sabStr}],
+        0: null
+      }
+    };
+  }
+
+  var WEEKS = [
+    W(1,2026,8,7,'Base',false,'Técnica 20’ Z2 + 4×15” progresiones (rec. 45”)','Empuje 4×8 RPE6-7','4×8 RPE6','Tracción 4×8 RPE6-7 (face pull)','Rodaje 20’ continuo, Z2 conversacional','Larga 25’ continuo, Z2 conversacional','Core + hombro','arranque'),
+    W(2,2026,8,14,'Base',false,'Técnica 22’ Z2 + 4×15” prog. (rec. 45”)','Empuje 4×8 RPE7','4×8 RPE6-7','Tracción 4×8 RPE7','Rodaje 22’ continuo Z2','Larga 28’ continuo Z2','Core + hombro'),
+    W(3,2026,8,21,'Base',false,'Técnica 25’ Z2 + 5×15” prog. + cuesta 2×8” @6-8% (primer contacto)','Empuje 4×8 RPE7','4×9 RPE7','Tracción 4×8 RPE7','Rodaje 25’ continuo Z2','Larga 32’ continuo Z2','Core + hombro','cuesta 1/3'),
+    W(4,2026,8,28,'Base',false,'Técnica 25’ Z2 + 5×20” prog. + cuesta 4×8” @6-8%','Empuje 4×8 RPE7','4×9 RPE7 · funcional ligero','Tracción 4×8 RPE7','Rodaje 25’ Z2 + 15’ funcional ligero','Larga 35’ continuo Z2','Core + hombro','cuesta 2/3'),
+    W(5,2026,9,5,'Base',false,'Técnica 28’ Z2 + 6×20” prog. + cuesta 6×8” @6-8%','Empuje 4×8 RPE7-8','4×10 RPE7','Tracción 4×8 RPE7-8','Rodaje 28’ Z2 + 15’ funcional ligero','Larga 38’ continuo Z2','Core + hombro','cuesta 3/3'),
+    W(6,2026,9,12,'Base',true,'Técnica 18’ Z2, sin progresiones ni cuestas (descarga)','Empuje 3×8 RPE5, técnica','3×8 RPE5-6','Tracción 3×8 RPE5, técnica','Rodaje 18’ muy suave','Larga 25’ suave','Core + hombro (ligero)','descarga'),
+    W(7,2026,9,19,'Desarrollo',false,'Series eficiencia 8×300 m @más rápido que ritmo carrera (rec. 2’)','Empuje 4×6 RPE7-8 (test overhead)','4×6 RPE7-8','Tracción 4×8 RPE7','Rodaje 30’ Z2 + 15’ funcional ligero','Larga 40’, últimos 10’ @RPE6','Core + hombro','eficiencia'),
+    W(8,2026,9,26,'Desarrollo',false,'Sprints en cuesta 6×10” @5-8%, casi máximo + rodaje 20’ encuadrando','Empuje 4×8 RPE7','4×10 RPE7 (hipertrofia)','Tracción 4×8 RPE7','Rodaje 30’ Z2 + 15’ funcional','Larga 42’, últimos 10’ @RPE6','Core + hombro','cuesta'),
+    W(9,2026,10,2,'Desarrollo',false,'Series largas 8×400 m @RPE8, ritmo carrera (rec. 75”)','Empuje 4×6 RPE8','4×6 RPE8','Tracción 4×6 RPE8','Umbral en estaciones: 3 rondas (150 m sled push + 10 wall balls + 200 m @RPE7-8) + 15’ rodaje cierre','Larga 45’, últimos 10’ @RPE6-7','Core + hombro','umbral'),
+    W(10,2026,10,9,'Desarrollo',false,'Tempo 20’ continuo @70-75% esfuerzo (tras 10’ calent.)','Empuje 4×8 RPE7','4×10 RPE7','Tracción 4×8 RPE7','Rodaje 35’ Z2 + 15’ funcional','Larga 48’, últimos 10’ @RPE6-7','Core + hombro','tempo'),
+    W(11,2026,10,16,'Desarrollo',false,'Series eficiencia 6×200 m @muy rápido (rec. 2’)','Empuje 4×6 RPE8','4×6 RPE8','Tracción 4×6 RPE8','Umbral en estaciones: 3 rondas (150 m sled pull + 15 burpees + 200 m @RPE7-8)','Larga 55’, últimos 15’ @RPE6-7','Core + hombro','umbral'),
+    W(12,2026,10,23,'Desarrollo',true,'Series 4×400 m @RPE6-7 (rec. 2’), suave','Empuje 3×8 RPE5, técnica','3×8 RPE5-6','Tracción 3×8 RPE5, técnica','Rodaje 25’ suave','Larga 30’ suave','Core + hombro (ligero)','descarga'),
+    W(13,2026,10,30,'Específico Hyrox',false,'Series largas 6×600 m @ritmo carrera (rec. 2’)','Empuje 3×8 RPE7','Mantenim. 3×5 RPE7 · sled/wall ball','Tracción 3×8 RPE7','Umbral en estaciones: 4 rondas (100 m sled push + 100 m sled pull + 10 wall balls + 200 m @RPE7-8)','Larga 45’, últimos 15’ @RPE7','Core + hombro','umbral'),
+    W(14,2026,11,7,'Específico Hyrox',false,'Series largas 5×800 m @ritmo carrera (rec. 2’30”)','Empuje 3×8 RPE7','Farmer + sandbag lunges','Tracción 3×8 RPE7','Umbral en estaciones: 4 rondas (50 m farmer carry + 20 sandbag lunges + 200 m @RPE7-8)','Larga 50’, 2×10’ @RPE7','Core + hombro','umbral'),
+    W(15,2026,11,14,'Específico Hyrox',false,'Sprints en cuesta 8×10” @máximo + 4×400 m @ritmo carrera (rec. 2’)','Empuje 3×8 RPE7','Burpee broad jump + remo','Tracción 3×8 RPE7','Umbral en estaciones: 4 rondas (80 m burpee broad jump + 250 m remo + 200 m @RPE7-8)','Larga 55’ con bloques a ritmo carrera','Core + hombro','cuesta + umbral'),
+    W(16,2026,11,21,'Específico Hyrox',false,'Series suaves 4×400 m @RPE6-7 (activación)','Empuje 2×8 RPE6','Mantenim. · volumen moderado','Tracción 2×8 RPE6','Rodaje 25’ suave, previo al test','Medio-Hyrox: 4 km + 4 estaciones (500 SkiErg / 25 m sled push / 25 m sled pull / 50 wall balls) @ritmo objetivo','Core + hombro (activación)','test'),
+    W(17,2026,11,28,'Específico Hyrox',false,'Series largas 6×800 m @ritmo carrera (rec. 2’)','Empuje 3×8 RPE7','Estaciones completas, carga alta','Tracción 3×8 RPE7','Umbral en estaciones (avanzado): 6 rondas cortas enlazando estación + carrera','Larga 60’, 20’ finales @ritmo carrera','Core + hombro','umbral'),
+    W(18,2027,0,4,'Específico Hyrox',true,'Series 4×400 m suaves @RPE6','Empuje 3×8 RPE5, técnica','3×8 RPE5-6','Tracción 3×8 RPE5, técnica','Rodaje 25’ suave','Larga 30’ suave','Core + hombro (ligero)','descarga'),
+    W(19,2027,0,11,'Pico y puesta a punto',false,'Series largas 5×600 m @ritmo carrera (rec. 2’)','Empuje/Tracción 2×8 RPE6','Mantenim. 2×5 RPE7','Empuje/Tracción 2×8 RPE6','Umbral en estaciones ligero: 3 rondas','Larga 50’, 15’ @ritmo carrera','Core + hombro','última carga'),
+    W(20,2027,0,18,'Pico y puesta a punto',false,'Rodaje suave 20’ (pre-simulacro)','Solo activación, sin carga pesada','Sin pierna pesada','Solo activación, sin carga pesada','Rodaje suave 20’','Simulacro completo Hyrox: 8 km + 8 estaciones oficiales @ritmo objetivo','—','simulacro'),
+    W(21,2027,0,25,'Pico y puesta a punto',false,'Series 4×400 m @RPE7 (rec. 2’)','Movilidad + activación ligera','Sin pierna pesada','Movilidad + activación ligera','Rodaje suave 25’','Larga 35’ suave, 10’ @ritmo carrera','Core + hombro (ligero)','taper'),
+    W(22,2027,1,1,'Pico y puesta a punto',false,'Series 3×300 m @RPE7 (rec. 2’)','Movilidad + activación ligera','Solo movilidad','Movilidad + activación ligera','Rodaje suave 20’','Rodaje 25’ suave + 4 progresiones cortas','Core + hombro (ligero)','taper')
+  ];
+
+  // Semana 23: semana de carrera, no sigue la plantilla estándar
+  WEEKS.push({
+    n: 23, start: new Date(2027, 1, 8), block: 'Pico y puesta a punto', deload: false, tag: 'carrera',
+    days: {
+      1: [{k:'Carrera', t:'Rodaje muy suave 20’ + movilidad'}],
+      2: null,
+      3: [{k:'Activación', t:'15’ + 4 progresiones cortas'}],
+      4: null,
+      5: [{k:'Movilidad', t:'Movilidad ligera, repasar logística de carrera'}],
+      6: [{k:'Carrera', t:'DÍA DE CARRERA — confía en el trabajo hecho'}],
+      0: null
+    }
+  });
+
+  function sameDay(a, b){
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  function findWeekFor(date){
+    for (var i = 0; i < WEEKS.length; i++){
+      var w = WEEKS[i];
+      var weekEnd = new Date(w.start);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      if (date >= w.start && date < weekEnd) return w;
+    }
+    return null;
+  }
+
+  function daysBetween(a, b){
+    var msPerDay = 86400000;
+    var utcA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    var utcB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((utcB - utcA) / msPerDay);
+  }
+
+  function fmtDate(d){
+    var dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return dias[d.getDay()] + ' ' + d.getDate() + ' ' + meses[d.getMonth()];
+  }
+
+  function renderToday(){
+    var headingEl = document.getElementById('todayHeading');
+    var dateEl = document.getElementById('todayDate');
+    var weekEl = document.getElementById('todayWeek');
+    var sessionsEl = document.getElementById('todaySessions');
+    var linkEl = document.getElementById('todayLink');
+
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (today < START){
+      headingEl.textContent = 'Aún no ha empezado';
+      dateEl.textContent = 'Hoy es ' + fmtDate(today) + ' — el plan arranca el ' + fmtDate(START);
+      weekEl.textContent = '';
+      var firstWeek = WEEKS[0];
+      renderSessions(sessionsEl, firstWeek.days[1], 'Primer entrenamiento (lunes ' + firstWeek.start.getDate() + ')');
+      linkEl.href = '#wk1';
+      return;
+    }
+
+    // busca hoy, y si no hay entreno, avanza día a día hasta 10 días
+    for (var offset = 0; offset <= 10; offset++){
+      var d = new Date(today);
+      d.setDate(d.getDate() + offset);
+      var week = findWeekFor(d);
+      if (!week){
+        if (offset === 0){
+          headingEl.textContent = 'Enhorabuena';
+          dateEl.textContent = 'El plan ya terminó — la semana de carrera fue la 23.';
+          weekEl.textContent = '';
+          sessionsEl.innerHTML = '';
+          linkEl.href = '#calendario';
+          return;
+        }
+        continue;
+      }
+      var daySessions = week.days[d.getDay()];
+      if (daySessions && daySessions.length){
+        var isToday = offset === 0;
+        headingEl.textContent = isToday ? 'Hoy toca esto' : 'Hoy descansas — mañana toca esto';
+        if (!isToday && offset > 1){
+          headingEl.textContent = 'Hoy descansas — el próximo entreno es este';
+        }
+        dateEl.textContent = fmtDate(d) + (isToday ? ' (hoy)' : '');
+        weekEl.textContent = 'Semana ' + week.n + ' de 23 · Bloque ' + week.block + (week.deload ? ' · descarga' : '');
+        renderSessions(sessionsEl, daySessions);
+        linkEl.href = '#wk' + week.n;
+        highlightWeekRow(week.n);
+        return;
+      }
+    }
+    headingEl.textContent = 'Descanso';
+    dateEl.textContent = fmtDate(today);
+    weekEl.textContent = '';
+    sessionsEl.innerHTML = '';
+    linkEl.href = '#calendario';
+  }
+
+  function pillClassFor(k){
+    if (k.indexOf('Carrera') === 0) return 'run';
+    if (k.indexOf('pierna') !== -1) return 'leg';
+    return 'strength';
+  }
+
+  function renderSessions(container, sessions, overrideLabel){
+    if (!sessions || !sessions.length){ container.innerHTML = ''; return; }
+    var html = '';
+    sessions.forEach(function(s){
+      html += '<div class="pill ' + pillClassFor(s.k) + '"><span class="k">' + escapeHtmlToday(overrideLabel || s.k) + '</span>' + escapeHtmlToday(s.t) + '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function escapeHtmlToday(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function highlightWeekRow(n){
+    var row = document.getElementById('wk' + n);
+    if (row) row.classList.add('wk-highlight');
+  }
+
+  renderToday();
+})();
+</script>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'hyrox_marcas_v1';
+  var PRESETS = [
+    {id:'run',        label:'Carrera',                   type:'run',    dir:'down'},
+    {id:'squat1rm',   label:'Sentadilla 1RM',            type:'number', unit:'kg',   dir:'up',   placeholder:'kg'},
+    {id:'deadlift1rm',label:'Peso muerto 1RM',           type:'number', unit:'kg',   dir:'up',   placeholder:'kg'},
+    {id:'bench1rm',   label:'Press banca 1RM',           type:'number', unit:'kg',   dir:'up',   placeholder:'kg'},
+    {id:'wallballs',  label:'Wall balls sin parar',      type:'number', unit:'reps', dir:'up',   placeholder:'reps'},
+    {id:'pullups',    label:'Dominadas estrictas',       type:'number', unit:'reps', dir:'up',   placeholder:'reps'},
+    {id:'sled50',     label:'Sled push 50 m',            type:'time',   dir:'down', placeholder:'mm:ss'},
+    {id:'farmer200',  label:'Farmer carry 200 m',        type:'time',   dir:'down', placeholder:'mm:ss'},
+    {id:'bodyweight', label:'Peso corporal',             type:'number', unit:'kg',   dir:'neutral', placeholder:'kg'},
+    {id:'custom',     label:'Otro…',                     type:'text',   dir:'neutral', placeholder:'valor'}
+  ];
+  var byId = {};
+  PRESETS.forEach(function(p){ byId[p.id] = p; });
+
+  var elDate = document.getElementById('mDate');
+  var elMarker = document.getElementById('mMarker');
+  var elCustomField = document.getElementById('customField');
+  var elCustomName = document.getElementById('mCustomName');
+  var elValueField = document.getElementById('valueField');
+  var elValue = document.getElementById('mValue');
+  var elValueLabel = document.getElementById('mValueLabel');
+  var elRunDistanceField = document.getElementById('runDistanceField');
+  var elRunTimeField = document.getElementById('runTimeField');
+  var elRunPaceField = document.getElementById('runPaceField');
+  var elDistance = document.getElementById('mDistance');
+  var elRunTime = document.getElementById('mRunTime');
+  var elPaceDisplay = document.getElementById('mPaceDisplay');
+  var elNote = document.getElementById('mNote');
+  var elForm = document.getElementById('markForm');
+  var elSubmit = document.getElementById('mSubmit');
+  var elStatus = document.getElementById('markStatus');
+  var elGroups = document.getElementById('markGroups');
+
+  PRESETS.forEach(function(p){
+    var opt = document.createElement('option');
+    opt.value = p.id;
+    var suffix = p.unit ? ' (' + p.unit + ')' : (p.type === 'time' ? ' (tiempo)' : (p.type === 'run' ? ' (distancia + tiempo)' : ''));
+    opt.textContent = p.label + suffix;
+    elMarker.appendChild(opt);
+  });
+
+  var today = new Date();
+  elDate.value = today.toISOString().slice(0,10);
+
+  function updateFieldsForMarker(){
+    var p = byId[elMarker.value];
+    elCustomField.hidden = p.id !== 'custom';
+    elCustomName.required = p.id === 'custom';
+
+    var isRun = p.type === 'run';
+    elValueField.hidden = isRun;
+    elValue.required = !isRun;
+    elRunDistanceField.hidden = !isRun;
+    elRunTimeField.hidden = !isRun;
+    elRunPaceField.hidden = !isRun;
+    elDistance.required = isRun;
+    elRunTime.required = isRun;
+
+    if (!isRun){
+      elValue.placeholder = p.placeholder;
+      elValueLabel.textContent = 'Valor' + (p.unit ? ' (' + p.unit + ')' : '');
+    } else {
+      updatePaceDisplay();
+    }
+  }
+  elMarker.addEventListener('change', updateFieldsForMarker);
+  updateFieldsForMarker();
+
+  function updatePaceDisplay(){
+    var distanceKm = parseFloat((elDistance.value || '').replace(',', '.'));
+    var timeSec = parseTimeToSeconds(elRunTime.value || '');
+    if (!isNaN(distanceKm) && distanceKm > 0 && !isNaN(timeSec) && timeSec > 0){
+      var paceSec = timeSec / distanceKm;
+      elPaceDisplay.textContent = formatSeconds(paceSec) + ' /km';
+    } else {
+      elPaceDisplay.textContent = '—';
+    }
+  }
+  elDistance.addEventListener('input', updatePaceDisplay);
+  elRunTime.addEventListener('input', updatePaceDisplay);
+
+  function parseTimeToSeconds(raw){
+    var s = raw.trim();
+    if (/^\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+    var parts = s.split(':').map(function(x){ return parseFloat(x); });
+    if (parts.some(isNaN)) return NaN;
+    if (parts.length === 2) return parts[0]*60 + parts[1];
+    if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+    return NaN;
+  }
+  function formatSeconds(sec){
+    sec = Math.round(sec);
+    var h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+    if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return m + ':' + String(s).padStart(2,'0');
+  }
+  function parseNumeric(preset, raw){
+    if (preset.type === 'time') return parseTimeToSeconds(raw);
+    if (preset.type === 'number') { var n = parseFloat(raw.replace(',', '.')); return isNaN(n) ? NaN : n; }
+    return NaN;
+  }
+  function formatNumeric(preset, num){
+    if (preset.type === 'time') return formatSeconds(num);
+    return String(num) + (preset.unit ? ' ' + preset.unit : '');
+  }
+
+  function setStatus(msg, cls){
+    elStatus.textContent = msg || '';
+    elStatus.className = 'mark-status' + (cls ? ' ' + cls : '');
+  }
+
+  function loadEntries(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+  function saveEntries(entries){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      return true;
+    } catch(e){
+      setStatus('No se pudo guardar en este navegador (almacenamiento lleno o bloqueado).', 'err');
+      return false;
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function render(){
+    var entries = loadEntries();
+    if (!entries.length){
+      elGroups.innerHTML = '<div class="mark-empty">Todavía no hay marcas registradas — añade la primera arriba.</div>';
+      return;
+    }
+    var groups = {};
+    var order = [];
+    entries.forEach(function(data){
+      if (!data || !data.markerKey) return;
+      if (!groups[data.markerKey]){ groups[data.markerKey] = []; order.push(data.markerKey); }
+      groups[data.markerKey].push({ id: data.id, data: data });
+    });
+
+    var html = '';
+    order.forEach(function(key){
+      var groupEntries = groups[key];
+      var preset = byId[groupEntries[0].data.markerId] || byId.custom;
+      var label = groupEntries[0].data.markerLabel;
+      html += '<div class="mark-group"><div class="mg-head"><div class="mg-name">' + escapeHtml(label) + '</div><div class="mg-count">' + groupEntries.length + '</div></div><div class="mark-entries">';
+      var sorted = groupEntries.slice().sort(function(a,b){ return (a.data.fecha < b.data.fecha) ? 1 : -1; });
+      for (var i = 0; i < sorted.length; i++){
+        var e = sorted[i];
+        var prev = sorted[i+1];
+        var deltaHtml = '';
+        if (prev && typeof e.data.valueNum === 'number' && typeof prev.data.valueNum === 'number'){
+          var diff = e.data.valueNum - prev.data.valueNum;
+          if (Math.abs(diff) > 1e-9){
+            var improved = preset.dir === 'up' ? diff > 0 : (preset.dir === 'down' ? diff < 0 : null);
+            var diffLabel = (preset.type === 'time' || preset.type === 'run')
+              ? (diff > 0 ? '+' : '-') + formatSeconds(Math.abs(diff)) + (preset.type === 'run' ? '/km' : '')
+              : (diff > 0 ? '+' : '') + (Math.round(diff*100)/100) + (preset.unit ? preset.unit : '');
+            var cls = improved === true ? 'good' : (improved === false ? 'bad' : '');
+            deltaHtml = '<span class="me-delta' + (cls ? ' ' + cls : '') + '">' + diffLabel + '</span>';
+          }
+        }
+        html += '<div class="mark-entry">'
+          + '<span class="me-date">' + escapeHtml(e.data.fecha) + '</span>'
+          + '<span class="me-val">' + escapeHtml(e.data.valueRaw) + '</span>'
+          + deltaHtml
+          + '<button type="button" class="me-del" data-id="' + e.id + '" title="Borrar">&times;</button>'
+          + (e.data.note ? '<div class="me-note">' + escapeHtml(e.data.note) + '</div>' : '')
+          + '</div>';
+      }
+      html += '</div></div>';
+    });
+    elGroups.innerHTML = html;
+
+    elGroups.querySelectorAll('.me-del').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-id');
+        var remaining = loadEntries().filter(function(x){ return x.id !== id; });
+        saveEntries(remaining);
+        render();
+      });
+    });
+  }
+
+  elForm.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var preset = byId[elMarker.value];
+    var markerLabel = preset.id === 'custom' ? elCustomName.value.trim() : preset.label;
+    if (preset.id === 'custom' && !markerLabel){ setStatus('Dale un nombre al marcador.', 'err'); return; }
+    var markerKey = preset.id === 'custom' ? 'custom:' + markerLabel.toLowerCase() : preset.id;
+
+    var entry;
+    var newId = 'm' + Date.now() + Math.random().toString(36).slice(2,8);
+    if (preset.type === 'run'){
+      var distanceKm = parseFloat((elDistance.value || '').replace(',', '.'));
+      var timeSec = parseTimeToSeconds(elRunTime.value || '');
+      if (isNaN(distanceKm) || distanceKm <= 0){ setStatus('La distancia tiene que ser un número mayor que 0 (en km).', 'err'); return; }
+      if (isNaN(timeSec) || timeSec <= 0){ setStatus('Formato de tiempo no válido, usa mm:ss.', 'err'); return; }
+      var paceSec = timeSec / distanceKm;
+      entry = {
+        id: newId,
+        fecha: elDate.value,
+        markerId: preset.id,
+        markerKey: markerKey,
+        markerLabel: markerLabel,
+        distanceKm: distanceKm,
+        timeSec: timeSec,
+        paceSecPerKm: paceSec,
+        valueRaw: (Math.round(distanceKm*100)/100) + ' km en ' + formatSeconds(timeSec) + ' (' + formatSeconds(paceSec) + '/km)',
+        valueNum: paceSec,
+        note: elNote.value.trim(),
+        createdAt: Date.now()
+      };
+    } else {
+      var rawValue = elValue.value.trim();
+      if (!rawValue){ setStatus('Falta el valor.', 'err'); return; }
+      var valueNum = preset.type === 'text' ? null : parseNumeric(preset, rawValue);
+      if (preset.type !== 'text' && isNaN(valueNum)){
+        setStatus(preset.type === 'time' ? 'Formato de tiempo no válido, usa mm:ss.' : 'Ese valor no es un número válido.', 'err');
+        return;
+      }
+      entry = {
+        id: newId,
+        fecha: elDate.value,
+        markerId: preset.id,
+        markerKey: markerKey,
+        markerLabel: markerLabel,
+        valueRaw: preset.type === 'text' ? rawValue : formatNumeric(preset, valueNum),
+        valueNum: valueNum,
+        note: elNote.value.trim(),
+        createdAt: Date.now()
+      };
+    }
+
+    var entries = loadEntries();
+    entries.push(entry);
+    if (saveEntries(entries)){
+      setStatus('Marca guardada en este navegador.', 'ok');
+      elValue.value = '';
+      elDistance.value = '';
+      elRunTime.value = '';
+      updatePaceDisplay();
+      elNote.value = '';
+      render();
+    }
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
