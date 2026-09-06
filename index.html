@@ -343,7 +343,7 @@
     border-bottom:1px solid var(--line);
   }
   .mark-form .field{display:flex; flex-direction:column; gap:5px;}
-  .mark-form .field.wide{grid-column:span 2;}
+  .mark-form .field.wide{grid-column:1 / -1;}
   .mark-form label{
     font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
     letter-spacing:0.06em; color:var(--ink-faint);
@@ -375,6 +375,34 @@
   .mark-status{padding:0 24px; font-size:12.5px; color:var(--ink-faint); min-height:34px; display:flex; align-items:center;}
   .mark-status.ok{color:var(--good);}
   .mark-status.err{color:var(--bad);}
+
+  /* ---------- feedback panel ---------- */
+  .feedback{border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .feedback-head{padding:16px 24px 10px;}
+  .feedback-head h4{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:16px;
+    text-transform:uppercase; letter-spacing:0.03em; color:var(--ink);
+  }
+  .feedback-items{display:flex; flex-direction:column; gap:1px; background:var(--line);}
+  .feedback-item{
+    background:var(--surface); padding:13px 24px 13px 20px;
+    display:grid; grid-template-columns:96px 1fr; gap:14px; align-items:baseline;
+    font-size:13px; color:var(--ink); line-height:1.5;
+    border-left:3px solid var(--line-strong);
+  }
+  .feedback-item .fi-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--ink-faint); padding-top:2px; white-space:nowrap;
+  }
+  .feedback-item.good{border-left-color:var(--good);}
+  .feedback-item.good .fi-tag{color:var(--good);}
+  .feedback-item.bad{border-left-color:var(--bad);}
+  .feedback-item.bad .fi-tag{color:var(--bad);}
+  .feedback-item.neutral{border-left-color:var(--strength);}
+  .feedback-item.neutral .fi-tag{color:var(--strength);}
+  .feedback-item.warn{border-left-color:var(--leg);}
+  .feedback-item.warn .fi-tag{color:var(--leg);}
+  .feedback-empty{padding:14px 24px 20px; font-size:13px; color:var(--ink-faint);}
 
   .mark-groups{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px; background:var(--line);}
   .mark-group{background:var(--surface); padding:16px 20px 18px;}
@@ -428,9 +456,35 @@
 
   footer{padding:32px 24px 48px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-faint); text-align:center;}
 
+  @media (max-width:900px){
+    .mark-form{grid-template-columns:repeat(2,1fr);}
+  }
+
   @media (max-width:640px){
     .week-grid{grid-template-columns:repeat(7,150px);}
     nav.jump{overflow-x:auto; flex-wrap:nowrap;}
+    header.hero{padding:40px 18px 26px;}
+    .wrap{padding:0 18px 72px;}
+    section{padding:38px 0 8px;}
+    .today-card{padding:20px 18px 20px;}
+    .stat-row{grid-template-columns:repeat(2,1fr);}
+    .mark-form{grid-template-columns:1fr; padding:16px 18px;}
+    .mark-form button{justify-self:stretch; text-align:center;}
+    .tracker-head{padding:18px 18px 4px;}
+    .mark-status{padding:0 18px;}
+    .feedback-head{padding:14px 18px 8px;}
+    .feedback-item{grid-template-columns:1fr; gap:4px; padding:12px 18px;}
+    .mark-groups{grid-template-columns:1fr;}
+    .mark-group{padding:14px 18px 16px;}
+    .mark-entry{grid-template-columns:1fr auto; row-gap:2px;}
+    .mark-entry .me-date{grid-column:1 / -1; order:-1;}
+    table.plan th{position:static;}
+  }
+
+  @media (max-width:420px){
+    h1.title{font-size:34px;}
+    .stat-row{grid-template-columns:1fr 1fr;}
+    .blocks{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -857,7 +911,7 @@
     <div class="tracker" id="tracker">
       <div class="tracker-head">
         <h3>Registro de marcas</h3>
-        <p>Apunta tus marcas a medida que las vayas haciendo &mdash; tests de carrera, PRs de fuerza, estaciones Hyrox&hellip; Se guardan en este navegador (localStorage), así que seguirán aquí la próxima vez que abras la página <strong>en el mismo dispositivo y navegador</strong>.</p>
+        <p>Apunta tus marcas a medida que las vayas haciendo &mdash; tests de carrera, PRs de fuerza, estaciones Hyrox&hellip; Se guardan en la nube, así que verás lo mismo <strong>desde el móvil y desde el portátil</strong>.</p>
       </div>
       <form class="mark-form" id="markForm">
         <div class="field">
@@ -895,6 +949,16 @@
         <button type="submit" id="mSubmit">Guardar marca</button>
       </form>
       <div class="mark-status" id="markStatus"></div>
+
+      <div class="feedback" id="feedback">
+        <div class="feedback-head">
+          <h4>Feedback para tus próximos entrenamientos</h4>
+        </div>
+        <div class="feedback-items" id="feedbackItems">
+          <div class="feedback-empty">Añade tu primera marca arriba para empezar a recibir feedback aquí.</div>
+        </div>
+      </div>
+
       <div class="mark-groups" id="markGroups">
         <div class="mark-empty">Cargando registro&hellip;</div>
       </div>
@@ -1078,9 +1142,9 @@
 })();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function(){
-  var STORAGE_KEY = 'hyrox_marcas_v1';
   var PRESETS = [
     {id:'run',        label:'Carrera',                   type:'run',    dir:'down'},
     {id:'squat1rm',   label:'Sentadilla 1RM',            type:'number', unit:'kg',   dir:'up',   placeholder:'kg'},
@@ -1193,49 +1257,189 @@
     elStatus.className = 'mark-status' + (cls ? ' ' + cls : '');
   }
 
-  function loadEntries(){
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch(e){ return []; }
+  var SUPABASE_URL = 'https://gxcmwoowwscfibavmwnu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_hfKnuSuqmV6QRJ99jgYmzA_ZvMqtlFq';
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function toRow(entry){
+    return {
+      id: entry.id,
+      fecha: entry.fecha,
+      marker_id: entry.markerId,
+      marker_key: entry.markerKey,
+      marker_label: entry.markerLabel,
+      value_raw: entry.valueRaw,
+      value_num: (typeof entry.valueNum === 'number') ? entry.valueNum : null,
+      distance_km: (typeof entry.distanceKm === 'number') ? entry.distanceKm : null,
+      time_sec: (typeof entry.timeSec === 'number') ? entry.timeSec : null,
+      pace_sec_per_km: (typeof entry.paceSecPerKm === 'number') ? entry.paceSecPerKm : null,
+      note: entry.note || '',
+      created_at: entry.createdAt
+    };
   }
-  function saveEntries(entries){
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-      return true;
-    } catch(e){
-      setStatus('No se pudo guardar en este navegador (almacenamiento lleno o bloqueado).', 'err');
-      return false;
-    }
+  function fromRow(row){
+    return {
+      id: row.id,
+      fecha: row.fecha,
+      markerId: row.marker_id,
+      markerKey: row.marker_key,
+      markerLabel: row.marker_label,
+      valueRaw: row.value_raw,
+      valueNum: row.value_num,
+      distanceKm: row.distance_km,
+      timeSec: row.time_sec,
+      paceSecPerKm: row.pace_sec_per_km,
+      note: row.note,
+      createdAt: row.created_at
+    };
   }
 
-  function escapeHtml(s){
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  function loadDocs(){
+    return sb.from('marcas').select('*').order('fecha', { ascending: true }).then(function(res){
+      if (res.error) throw res.error;
+      return res.data.map(function(row){
+        var entry = fromRow(row);
+        return { id: entry.id, data: function(){ return entry; } };
+      });
     });
   }
 
-  function render(){
-    var entries = loadEntries();
-    if (!entries.length){
-      elGroups.innerHTML = '<div class="mark-empty">Todavía no hay marcas registradas — añade la primera arriba.</div>';
+  function refresh(){
+    return loadDocs().then(function(docs){
+      render(docs);
+    }).catch(function(err){
+      setStatus('No se pudo cargar el registro (' + err.message + ').', 'err');
+    });
+  }
+
+  refresh();
+  window.addEventListener('focus', refresh);
+
+  var STRENGTH_LABELS = {
+    squat1rm:'Sentadilla 1RM', deadlift1rm:'Peso muerto 1RM', bench1rm:'Press banca 1RM',
+    wallballs:'Wall balls', pullups:'Dominadas', sled50:'Sled push 50 m', farmer200:'Farmer carry 200 m'
+  };
+  var STRENGTH_DIR = { squat1rm:'up', deadlift1rm:'up', bench1rm:'up', wallballs:'up', pullups:'up', sled50:'down', farmer200:'down' };
+
+  function formatKm(n){
+    return (Math.round(n * 100) / 100).toString().replace('.', ',');
+  }
+
+  function renderFeedback(docs){
+    var elFeedback = document.getElementById('feedbackItems');
+    if (!elFeedback) return;
+    if (!docs.length){
+      elFeedback.innerHTML = '<div class="feedback-empty">Añade tu primera marca arriba para empezar a recibir feedback aquí.</div>';
+      return;
+    }
+
+    var byKey = {};
+    docs.forEach(function(d){
+      var data = d.data();
+      if (!data || !data.markerKey) return;
+      if (!byKey[data.markerKey]) byKey[data.markerKey] = [];
+      byKey[data.markerKey].push(data);
+    });
+    Object.keys(byKey).forEach(function(k){
+      byKey[k].sort(function(a,b){ return a.fecha < b.fecha ? -1 : (a.fecha > b.fecha ? 1 : 0); });
+    });
+
+    var items = [];
+
+    // --- Carrera: ritmo + regla del 110% ---
+    var runs = byKey['run'] || [];
+    if (runs.length){
+      var longest = runs.reduce(function(m,r){ return Math.max(m, r.distanceKm || 0); }, 0);
+      var cap = Math.round(longest * 1.10 * 100) / 100;
+      items.push({ tag:'Rodaje', cls:'neutral', text:'Tu carrera más larga registrada es ' + formatKm(longest) + ' km. Evita tiradas sueltas por encima de ' + formatKm(cap) + ' km en las próximas 1&ndash;2 semanas &mdash; es el margen que más se asocia a sobrecarga, más que el volumen semanal total.' });
+
+      if (runs.length >= 2){
+        var lastRun = runs[runs.length - 1];
+        var prevRun = runs[runs.length - 2];
+        var diffPace = prevRun.paceSecPerKm - lastRun.paceSecPerKm; // positivo = más rápido
+        var pct = diffPace / prevRun.paceSecPerKm;
+        if (pct > 0.02){
+          items.push({ tag:'Ritmo', cls:'good', text:'Has bajado el ritmo ' + formatSeconds(Math.abs(diffPace)) + '/km desde tu carrera anterior (' + formatSeconds(prevRun.paceSecPerKm) + ' &rarr; ' + formatSeconds(lastRun.paceSecPerKm) + '/km). Puedes apretar ligeramente el ritmo objetivo en tus próximas series de calidad.' });
+        } else if (pct < -0.03){
+          items.push({ tag:'Ritmo', cls:'warn', text:'Tu última carrera fue más lenta que la anterior (' + formatSeconds(prevRun.paceSecPerKm) + ' &rarr; ' + formatSeconds(lastRun.paceSecPerKm) + '/km). Si coincide con piernas cargadas o mal descanso, no fuerces la próxima serie &mdash; baja el RPE objetivo un punto.' });
+        } else {
+          items.push({ tag:'Ritmo', cls:'neutral', text:'Ritmo estable respecto a tu última marca (' + formatSeconds(lastRun.paceSecPerKm) + '/km). Sigue la progresión del calendario tal cual.' });
+        }
+      } else {
+        items.push({ tag:'Ritmo', cls:'neutral', text:'Solo tienes una carrera registrada todavía &mdash; apunta la próxima para empezar a ver la tendencia de ritmo.' });
+      }
+    }
+
+    // --- Marcadores de fuerza / estación con dirección definida ---
+    Object.keys(STRENGTH_LABELS).forEach(function(key){
+      var arr = byKey[key];
+      if (!arr || arr.length < 2) return;
+      var lastM = arr[arr.length - 1];
+      var prevM = arr[arr.length - 2];
+      if (typeof lastM.valueNum !== 'number' || typeof prevM.valueNum !== 'number') return;
+      var dir = STRENGTH_DIR[key];
+      var diff = dir === 'up' ? (lastM.valueNum - prevM.valueNum) : (prevM.valueNum - lastM.valueNum);
+      if (Math.abs(diff) < 1e-9) return;
+      var label = STRENGTH_LABELS[key];
+      if (diff > 0){
+        items.push({ tag:label, cls:'good', text:'Mejora de ' + escapeHtml(prevM.valueRaw) + ' a ' + escapeHtml(lastM.valueRaw) + '. Puedes subir ligeramente la carga o el objetivo de tu próxima sesión de ese patrón.' });
+      } else {
+        items.push({ tag:label, cls:'warn', text:'Ha bajado de ' + escapeHtml(prevM.valueRaw) + ' a ' + escapeHtml(lastM.valueRaw) + '. Puede ser fatiga acumulada &mdash; mantén la carga actual en la próxima sesión en vez de forzar un nuevo intento.' });
+      }
+    });
+
+    // --- Notas recientes con molestia/dolor ---
+    var allSorted = docs.map(function(d){ return d.data(); }).filter(function(x){ return x && x.fecha; })
+      .sort(function(a,b){ return a.fecha < b.fecha ? 1 : -1; });
+    var painFound = allSorted.slice(0, 5).find(function(x){
+      var n = (x.note || '').toLowerCase();
+      return n.indexOf('dolor') !== -1 || n.indexOf('molesti') !== -1 || n.indexOf('pincha') !== -1;
+    });
+    if (painFound){
+      items.push({ tag:'Aviso', cls:'bad', text:'Mencionaste molestia en una nota reciente ("' + escapeHtml(painFound.note) + '"). Si persiste más de una semana, baja carga en esa zona y revisa la sección de gestión de hombro/gemelo antes de seguir subiendo intensidad.' });
+    }
+
+    // --- Frecuencia de registro ---
+    if (allSorted.length){
+      var lastDate = new Date(allSorted[0].fecha + 'T00:00:00');
+      var daysSince = Math.round((new Date().setHours(0,0,0,0) - lastDate.getTime()) / 86400000);
+      if (daysSince >= 14){
+        items.push({ tag:'Registro', cls:'neutral', text:'Llevas ' + daysSince + ' días sin apuntar ninguna marca. Registra tu próxima sesión de calidad para que el feedback siga reflejando cómo vas de verdad.' });
+      }
+    }
+
+    if (!items.length){
+      elFeedback.innerHTML = '<div class="feedback-empty">De momento no hay suficientes marcas para dar feedback &mdash; sigue registrando y aquí irán apareciendo recomendaciones.</div>';
+      return;
+    }
+
+    elFeedback.innerHTML = items.map(function(it){
+      return '<div class="feedback-item ' + it.cls + '"><span class="fi-tag">' + escapeHtml(it.tag) + '</span><span>' + it.text + '</span></div>';
+    }).join('');
+  }
+
+  function render(docs){
+    renderFeedback(docs);
+    if (!docs.length){
+      elGroups.innerHTML = '<div class="mark-empty">Todavía no hay marcas registradas &mdash; añade la primera arriba.</div>';
       return;
     }
     var groups = {};
     var order = [];
-    entries.forEach(function(data){
+    docs.forEach(function(d){
+      var data = d.data();
       if (!data || !data.markerKey) return;
       if (!groups[data.markerKey]){ groups[data.markerKey] = []; order.push(data.markerKey); }
-      groups[data.markerKey].push({ id: data.id, data: data });
+      groups[data.markerKey].push({ id: d.id, data: data });
     });
 
     var html = '';
     order.forEach(function(key){
-      var groupEntries = groups[key];
-      var preset = byId[groupEntries[0].data.markerId] || byId.custom;
-      var label = groupEntries[0].data.markerLabel;
-      html += '<div class="mark-group"><div class="mg-head"><div class="mg-name">' + escapeHtml(label) + '</div><div class="mg-count">' + groupEntries.length + '</div></div><div class="mark-entries">';
-      var sorted = groupEntries.slice().sort(function(a,b){ return (a.data.fecha < b.data.fecha) ? 1 : -1; });
+      var entries = groups[key];
+      var preset = byId[entries[0].data.markerId] || byId.custom;
+      var label = entries[0].data.markerLabel;
+      html += '<div class="mark-group"><div class="mg-head"><div class="mg-name">' + escapeHtml(label) + '</div><div class="mg-count">' + entries.length + '</div></div><div class="mark-entries">';
+      var sorted = entries.slice().sort(function(a,b){ return (a.data.fecha < b.data.fecha) ? 1 : -1; });
       for (var i = 0; i < sorted.length; i++){
         var e = sorted[i];
         var prev = sorted[i+1];
@@ -1266,10 +1470,18 @@
     elGroups.querySelectorAll('.me-del').forEach(function(btn){
       btn.addEventListener('click', function(){
         var id = btn.getAttribute('data-id');
-        var remaining = loadEntries().filter(function(x){ return x.id !== id; });
-        saveEntries(remaining);
-        render();
+        btn.disabled = true;
+        sb.from('marcas').delete().eq('id', id).then(function(res){
+          if (res.error){ setStatus('No se pudo borrar (' + res.error.message + ').', 'err'); btn.disabled = false; return; }
+          refresh();
+        });
       });
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
 
@@ -1322,21 +1534,24 @@
         createdAt: Date.now()
       };
     }
-
-    var entries = loadEntries();
-    entries.push(entry);
-    if (saveEntries(entries)){
-      setStatus('Marca guardada en este navegador.', 'ok');
+    elSubmit.disabled = true;
+    setStatus('Guardando…');
+    sb.from('marcas').insert([toRow(entry)]).then(function(res){
+      if (res.error){
+        setStatus('No se pudo guardar (' + res.error.message + ').', 'err');
+        elSubmit.disabled = false;
+        return;
+      }
+      setStatus('Marca guardada.', 'ok');
       elValue.value = '';
       elDistance.value = '';
       elRunTime.value = '';
       updatePaceDisplay();
       elNote.value = '';
-      render();
-    }
+      elSubmit.disabled = false;
+      refresh();
+    });
   });
-
-  render();
 })();
 </script>
 
